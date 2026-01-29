@@ -118,6 +118,12 @@ export const initCommand = command({
 			placeholder: "ogImage, coverImage, image, hero, etc.",
 		});
 
+		const tagsField = await consola.prompt("Field name for tags:", {
+			type: "text",
+			default: "tags",
+			placeholder: "tags, categories, keywords, etc.",
+		});
+
 		let frontmatterMapping: FrontmatterMapping | undefined = {};
 
 		if (titleField && titleField !== "title") {
@@ -131,6 +137,9 @@ export const initCommand = command({
 		}
 		if (coverField && coverField !== "ogImage") {
 			frontmatterMapping.coverImage = coverField as string;
+		}
+		if (tagsField && tagsField !== "tags") {
+			frontmatterMapping.tags = tagsField as string;
 		}
 
 		// Only keep frontmatterMapping if it has any custom fields

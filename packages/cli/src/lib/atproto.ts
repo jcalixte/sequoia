@@ -183,6 +183,10 @@ export async function createDocument(
     record.coverImage = coverImage;
   }
 
+  if (post.frontmatter.tags && post.frontmatter.tags.length > 0) {
+    record.tags = post.frontmatter.tags;
+  }
+
   const response = await agent.com.atproto.repo.createRecord({
     repo: agent.session!.did,
     collection: "site.standard.document",
@@ -227,6 +231,10 @@ export async function updateDocument(
     record.coverImage = coverImage;
   }
 
+  if (post.frontmatter.tags && post.frontmatter.tags.length > 0) {
+    record.tags = post.frontmatter.tags;
+  }
+
   await agent.com.atproto.repo.putRecord({
     repo: agent.session!.did,
     collection: collection!,
@@ -254,6 +262,7 @@ export interface DocumentRecord {
   publishedAt: string;
   canonicalUrl?: string;
   coverImage?: BlobObject;
+  tags?: string[];
   location?: string;
 }
 
