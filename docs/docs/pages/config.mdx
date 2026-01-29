@@ -14,15 +14,24 @@
 | `pdsUrl` | `string` | No | `"https://bsky.social"` | PDS server URL, generated automatically |
 | `identity` | `string` | No | - | Which stored identity to use |
 | `frontmatter` | `object` | No | - | Custom frontmatter field mappings |
+| `ignore` | `string[]` | No | - | Glob patterns for files to ignore |
 
 ### Example
 
 ```json
 {
-  "siteUrl": "https://myblog.com",
-  "contentDir": "./content/posts",
-  "publicationUri": "at://did:plc:abc123/site.standard.publication/self",
-  "pathPrefix": "/blog"
+  "siteUrl": "https://example.com",
+  "contentDir": "content/posts",
+  "imagesDir": "src/assets",
+  "publicDir": "public",
+  "outputDir": "dist",
+  "pathPrefix": "/posts",
+  "publicationUri": "at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/3mdlavhxjhm2v",
+  "pdsUrl": "https://andromeda.social",
+  "frontmatter": {
+    "publishDate": "date"
+  },
+  "ignore": ["_index.md"]
 }
 ```
 
@@ -60,3 +69,15 @@ Override default field names in `sequoia.json`:
   }
 }
 ```
+
+### Ignoring Files
+
+Some frameworks use special files like `_index.md` (Zola) for section pages that aren't actual blog posts. Use the `ignore` field to skip these files during publishing:
+
+```json
+{
+  "ignore": ["_index.md", "**/drafts/**"]
+}
+```
+
+Patterns use glob syntax and are matched against relative paths from `contentDir`.
