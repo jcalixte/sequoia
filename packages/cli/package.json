@@ -16,7 +16,8 @@
 	},
 	"scripts": {
 		"build": "bun build src/index.ts --compile --outfile dist/sequoia",
-		"dev": "bun run build && bun link"
+		"dev": "bun run build && bun link",
+		"deploy": "bun run build && bun publish"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"
