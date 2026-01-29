@@ -82,10 +82,6 @@ export function parseFrontmatter(content: string, mapping?: FrontmatterMapping):
   const coverField = mapping?.coverImage || "ogImage";
   frontmatter.ogImage = raw[coverField] || raw.ogImage;
 
-  // Hidden mapping
-  const hiddenField = mapping?.hidden || "hidden";
-  frontmatter.hidden = raw[hiddenField] || raw.hidden;
-
   // Tags mapping
   const tagsField = mapping?.tags || "tags";
   frontmatter.tags = raw[tagsField] || raw.tags;
@@ -113,11 +109,9 @@ export async function getContentHash(content: string): Promise<string> {
 
 export async function scanContentDirectory(
   contentDir: string,
-  include?: string[],
-  exclude?: string[],
   frontmatterMapping?: FrontmatterMapping
 ): Promise<BlogPost[]> {
-  const patterns = include || ["**/*.md", "**/*.mdx"];
+  const patterns = ["**/*.md", "**/*.mdx"];
   const posts: BlogPost[] = [];
 
   for (const pattern of patterns) {
@@ -127,10 +121,6 @@ export async function scanContentDirectory(
       cwd: contentDir,
       absolute: false,
     })) {
-      // Check exclusions
-      if (exclude?.some((ex) => relativePath.includes(ex))) {
-        continue;
-      }
 
       const filePath = path.join(contentDir, relativePath);
       const file = Bun.file(filePath);

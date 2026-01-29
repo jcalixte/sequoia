@@ -1,7 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import * as path from "path";
-import type { Credentials, BlogPost, BlobObject, PublisherConfig, PublicationRecord } from "./types";
-import { generateTid } from "./tid";
+import type { Credentials, BlogPost, BlobObject, PublisherConfig } from "./types";
 import { stripMarkdownForText } from "./markdown";
 
 export async function resolveHandleToPDS(handle: string): Promise<string> {
@@ -184,16 +183,9 @@ export async function createDocument(
     record.coverImage = coverImage;
   }
 
-  if (config.location) {
-    record.location = config.location;
-  }
-
-  const rkey = generateTid();
-
   const response = await agent.com.atproto.repo.createRecord({
     repo: agent.session!.did,
     collection: "site.standard.document",
-    rkey,
     record,
   });
 
@@ -233,10 +225,6 @@ export async function updateDocument(
 
   if (coverImage) {
     record.coverImage = coverImage;
-  }
-
-  if (config.location) {
-    record.location = config.location;
   }
 
   await agent.com.atproto.repo.putRecord({
@@ -342,12 +330,9 @@ export async function createPublication(
     };
   }
 
-  const rkey = generateTid();
-
   const response = await agent.com.atproto.repo.createRecord({
     repo: agent.session!.did,
     collection: "site.standard.publication",
-    rkey,
     record,
   });
 

@@ -66,7 +66,6 @@ export function generateConfigTemplate(options: {
 	pathPrefix?: string;
 	publicationUri: string;
 	pdsUrl?: string;
-	location?: string;
 	frontmatter?: FrontmatterMapping;
 }): string {
 	const config: Record<string, unknown> = {
@@ -94,10 +93,6 @@ export function generateConfigTemplate(options: {
 
 	if (options.pdsUrl && options.pdsUrl !== "https://bsky.social") {
 		config.pdsUrl = options.pdsUrl;
-	}
-
-	if (options.location) {
-		config.location = options.location;
 	}
 
 	if (options.frontmatter && Object.keys(options.frontmatter).length > 0) {

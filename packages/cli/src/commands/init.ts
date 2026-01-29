@@ -53,25 +53,13 @@ export const initCommand = command({
 			},
 		);
 
-		const hasImages = await consola.prompt(
-			"Do you have a separate directory for cover images?",
+		const imagesDir = await consola.prompt(
+			"Cover images directory (where cover/og images are stored, leave empty to skip):",
 			{
-				type: "confirm",
-				initial: false,
+				type: "text",
+				placeholder: "./public/images",
 			},
 		);
-
-		let imagesDir: string | undefined;
-		if (hasImages) {
-			const imgDir = await consola.prompt(
-				"Cover images directory (where cover/og images are stored):",
-				{
-					type: "text",
-					placeholder: "./public/images",
-				},
-			);
-			imagesDir = imgDir as string;
-		}
 
 		// Public/static directory for .well-known files
 		const publicDir = await consola.prompt(
@@ -104,63 +92,52 @@ export const initCommand = command({
 		);
 
 		// Frontmatter mapping configuration
-		const customFrontmatter = await consola.prompt(
-			"Do you use custom frontmatter field names?",
-			{
-				type: "confirm",
-				initial: false,
-			},
+		consola.info(
+			"Configure your frontmatter field mappings (press Enter to use defaults):",
 		);
 
-		let frontmatterMapping: FrontmatterMapping | undefined;
-		if (customFrontmatter) {
-			consola.info(
-				"Configure your frontmatter field mappings (press Enter to use defaults):",
-			);
+		const titleField = await consola.prompt("Field name for title:", {
+			type: "text",
+			default: "title",
+			placeholder: "title",
+		});
 
-			const titleField = await consola.prompt("Field name for title:", {
-				type: "text",
-				default: "title",
-				placeholder: "title",
-			});
+		const descField = await consola.prompt("Field name for description:", {
+			type: "text",
+			default: "description",
+			placeholder: "description",
+		});
 
-			const descField = await consola.prompt("Field name for description:", {
-				type: "text",
-				default: "description",
-				placeholder: "description",
-			});
+		const dateField = await consola.prompt("Field name for publish date:", {
+			type: "text",
+			default: "publishDate",
+			placeholder: "publishDate, pubDate, date, etc.",
+		});
 
-			const dateField = await consola.prompt("Field name for publish date:", {
-				type: "text",
-				default: "publishDate",
-				placeholder: "publishDate, pubDate, date, etc.",
-			});
+		const coverField = await consola.prompt("Field name for cover image:", {
+			type: "text",
+			default: "ogImage",
+			placeholder: "ogImage, coverImage, image, hero, etc.",
+		});
 
-			const coverField = await consola.prompt("Field name for cover image:", {
-				type: "text",
-				default: "ogImage",
-				placeholder: "ogImage, coverImage, image, hero, etc.",
-			});
+		let frontmatterMapping: FrontmatterMapping | undefined = {};
 
-			frontmatterMapping = {};
+		if (titleField && titleField !== "title") {
+			frontmatterMapping.title = titleField as string;
+		}
+		if (descField && descField !== "description") {
+			frontmatterMapping.description = descField as string;
+		}
+		if (dateField && dateField !== "publishDate") {
+			frontmatterMapping.publishDate = dateField as string;
+		}
+		if (coverField && coverField !== "ogImage") {
+			frontmatterMapping.coverImage = coverField as string;
+		}
 
-			if (titleField && titleField !== "title") {
-				frontmatterMapping.title = titleField as string;
-			}
-			if (descField && descField !== "description") {
-				frontmatterMapping.description = descField as string;
-			}
-			if (dateField && dateField !== "publishDate") {
-				frontmatterMapping.publishDate = dateField as string;
-			}
-			if (coverField && coverField !== "ogImage") {
-				frontmatterMapping.coverImage = coverField as string;
-			}
-
-			// Only keep frontmatterMapping if it has any custom fields
-			if (Object.keys(frontmatterMapping).length === 0) {
-				frontmatterMapping = undefined;
-			}
+		// Only keep frontmatterMapping if it has any custom fields
+		if (Object.keys(frontmatterMapping).length === 0) {
+			frontmatterMapping = undefined;
 		}
 
 		// Publication setup
@@ -214,19 +191,13 @@ export const initCommand = command({
 				},
 			);
 
-			const hasIcon = await consola.prompt("Add an icon image?", {
-				type: "confirm",
-				initial: false,
-			});
-
-			let iconPath: string | undefined;
-			if (hasIcon) {
-				const icon = await consola.prompt("Icon image path:", {
+			const iconPath = await consola.prompt(
+				"Icon image path (leave empty to skip):",
+				{
 					type: "text",
 					placeholder: "./icon.png",
-				});
-				iconPath = icon as string;
-			}
+				},
+			);
 
 			const showInDiscover = await consola.prompt("Show in Discover feed?", {
 				type: "confirm",
@@ -239,7 +210,7 @@ export const initCommand = command({
 					url: siteUrl as string,
 					name: pubName as string,
 					description: (pubDescription as string) || undefined,
-					iconPath,
+					iconPath: (iconPath as string) || undefined,
 					showInDiscover,
 				});
 				consola.success(`Publication created: ${publicationUri}`);
@@ -267,7 +238,7 @@ export const initCommand = command({
 		const configContent = generateConfigTemplate({
 			siteUrl: siteUrl as string,
 			contentDir: contentDir as string,
-			imagesDir,
+			imagesDir: imagesDir || undefined,
 			publicDir: publicDir as string,
 			outputDir: outputDir as string,
 			pathPrefix: pathPrefix as string,

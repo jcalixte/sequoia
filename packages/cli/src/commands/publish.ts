@@ -84,7 +84,7 @@ export const publishCommand = command({
 
     // Scan for posts
     consola.start("Scanning for posts...");
-    const posts = await scanContentDirectory(contentDir, config.include, config.exclude, config.frontmatter);
+    const posts = await scanContentDirectory(contentDir, config.frontmatter);
     consola.info(`Found ${posts.length} posts`);
 
     // Determine which posts need publishing
@@ -95,11 +95,6 @@ export const publishCommand = command({
     }> = [];
 
     for (const post of posts) {
-      // Skip hidden posts
-      if (post.frontmatter.hidden) {
-        continue;
-      }
-
       const contentHash = await getContentHash(post.rawContent);
       const relativeFilePath = path.relative(configDir, post.filePath);
       const postState = state.posts[relativeFilePath];

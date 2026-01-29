@@ -86,7 +86,7 @@ export const syncCommand = command({
 
     // Scan local posts
     consola.start("Scanning local content...");
-    const localPosts = await scanContentDirectory(contentDir, config.include, config.exclude, config.frontmatter);
+    const localPosts = await scanContentDirectory(contentDir, config.frontmatter);
     consola.info(`Found ${localPosts.length} local posts`);
 
     // Build a map of path -> local post for matching
