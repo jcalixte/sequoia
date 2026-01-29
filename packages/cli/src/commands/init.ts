@@ -28,7 +28,8 @@ export const initCommand = command({
 		}
 
 		consola.box(
-			"Publisher Configuration Setup\n\nLet's set up your publisher configuration.",
+			"Sequoia Configuration Setup\n\n" +
+				"Follow the prompts to build your config for publishing",
 		);
 
 		const siteUrl = await consola.prompt(
@@ -82,14 +83,11 @@ export const initCommand = command({
 		);
 
 		// Path prefix for posts
-		const pathPrefix = await consola.prompt(
-			"URL path prefix for posts:",
-			{
-				type: "text",
-				default: "/posts",
-				placeholder: "/posts, /blog, /articles, etc.",
-			},
-		);
+		const pathPrefix = await consola.prompt("URL path prefix for posts:", {
+			type: "text",
+			default: "/posts",
+			placeholder: "/posts, /blog, /articles, etc.",
+		});
 
 		// Frontmatter mapping configuration
 		consola.info(

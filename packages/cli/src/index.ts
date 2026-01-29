@@ -9,7 +9,36 @@ import { syncCommand } from "./commands/sync";
 
 const app = subcommands({
 	name: "sequoia",
-	description: "Publish evergreen content to the ATmosphere",
+	description: `
+
+                        *#######*
+                     =###*=: :=*###=
+                    ###.          ###
+                   *#*             *#*
+                  *##               ##*
+                  *#*               *##
+                  *##               ###
+                 =##+       :       +##=
+                =##.       +#*        ##=
+                ##=   *#+  +#*        =##
+               =#*     *##=*#*         *#+
+               +#*      .####*  .*:    *#*
+               =#*        =##* *##=    *#+
+                ##=        +####+     =##
+                =##.       +##*       ##=
+                 =##+      +#*      +##=
+                   *##*    +#*    *##*
+                     *#+   +#*   +#*
+                           +#*
+                           +#*
+                           +#*
+                           *#*
+                       +#########*
+
+Publish evergreen content to the ATmosphere
+https://tanlged.org/stevedylan.dev/sequoia
+
+	`,
 	version: "0.1.0",
 	cmds: {
 		auth: authCommand,
