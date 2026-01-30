@@ -1,6 +1,6 @@
 # Verifying
 
-In order for your posts to show up on indexers, the chances are you need to make sure your publication and your documents are verified. 
+In order for your posts to show up on indexers you need to make sure your publication and your documents are verified. 
 
 :::tip
 You an learn more about Standard.site verification [here](https://standard.site/)
@@ -15,3 +15,20 @@ As specified by Standard.site, the `site.standard.publication` record is verifie
 Every document or blog post that is published needs a `<link>` tag in the `<head>` of your blog post HTML page. The content of that link tag needs to be the AT URI for the record we just published on your PDS. There are two ways you can handle these: 
 - `sequoia inject` (recommended) - By running this command after publishing, and after building the site with your SSG, Sequoia will inject the link tags into your finished HTML. This way you don't have to manually edit it or mess with an SSG config to set it up. Just deploy the build folder after you have run `sequoia inject`!
 - Manual - After you have run `sequoia publish` the CLI will add in a new `atUri` field to every post's frontmatter. This way you can configure your SSG to read that frontmatter and include it in the build step, similar to how it might include an opengraph image in the meta tags. This approach gives you full control over the HTML files but will take a bit more skill.
+
+## Testing Verification
+
+After your publication and your document records have been published and you site has been deployed, you can test the verification of your records a few ways. 
+
+### pds.ls
+
+Visit [pds.ls](https://pds.ls) and in the search bar paste in a `arUri` for either your publication or document, click the info tab, and then click the "info" tab. This will have a schema verification that will make sure the fields are accurate, however this will not cover Standard.site verification as perscribed on their website.
+
+### Standard.site Validator
+
+Visit [site-validator.fly.dev](https://site-validator.fly.dev/) and paste in the URL for a blog post that has a record on your PDS. This site will check the schema as well as the requirements for standard.site verification.
+
+## Troubleshooting
+
+- Make sure that you are either using `sequoia inject` or manually handling the required `<link>` tags for each post. Read [workflows](/workflows) for a clear order of operations to publish, inject, and deploy.
+- Make sure that the `.well-known` publication record is present in your public/static folder, and that it's populating to your build folder (e.g. `dist`). There are some SSGs that will not automatically include dot files or directories.
