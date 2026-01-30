@@ -8,13 +8,18 @@ import {
 	select,
 	spinner,
 	log,
+	group,
 } from "@clack/prompts";
 import * as path from "path";
 import { findConfig, generateConfigTemplate } from "../lib/config";
 import { loadCredentials } from "../lib/credentials";
 import { createAgent, createPublication } from "../lib/atproto";
 import type { FrontmatterMapping } from "../lib/types";
-import { exitOnCancel } from "../lib/prompts";
+
+const onCancel = () => {
+	outro("Setup cancelled");
+	process.exit(0);
+};
 
 export const initCommand = command({
 	name: "init",
@@ -26,12 +31,13 @@ export const initCommand = command({
 		// Check if config already exists
 		const existingConfig = await findConfig();
 		if (existingConfig) {
-			const overwrite = exitOnCancel(
-				await confirm({
-					message: `Config already exists at ${existingConfig}. Overwrite?`,
-					initialValue: false,
-				}),
-			);
+			const overwrite = await confirm({
+				message: `Config already exists at ${existingConfig}. Overwrite?`,
+				initialValue: false,
+			});
+			if (overwrite === Symbol.for("cancel")) {
+				onCancel();
+			}
 			if (!overwrite) {
 				log.info("Keeping existing configuration");
 				return;
@@ -40,117 +46,109 @@ export const initCommand = command({
 
 		note("Follow the prompts to build your config for publishing", "Setup");
 
-		const siteUrl = exitOnCancel(
-			await text({
-				message: "Site URL (canonical URL of your site):",
-				placeholder: "https://example.com",
-			}),
+		// Site configuration group
+		const siteConfig = await group(
+			{
+				siteUrl: () =>
+					text({
+						message: "Site URL (canonical URL of your site):",
+						placeholder: "https://example.com",
+						validate: (value) => {
+							if (!value) return "Site URL is required";
+							try {
+								new URL(value);
+							} catch {
+								return "Please enter a valid URL";
+							}
+						},
+					}),
+				contentDir: () =>
+					text({
+						message: "Content directory:",
+						placeholder: "./src/content/blog",
+					}),
+				imagesDir: () =>
+					text({
+						message: "Cover images directory (leave empty to skip):",
+						placeholder: "./src/assets",
+					}),
+				publicDir: () =>
+					text({
+						message: "Public/static directory (for .well-known files):",
+						placeholder: "./public",
+					}),
+				outputDir: () =>
+					text({
+						message: "Build output directory (for link tag injection):",
+						placeholder: "./dist",
+					}),
+				pathPrefix: () =>
+					text({
+						message: "URL path prefix for posts:",
+						placeholder: "/posts, /blog, /articles, etc.",
+					}),
+			},
+			{ onCancel },
 		);
 
-		if (!siteUrl) {
-			log.error("Site URL is required");
-			process.exit(1);
-		}
-
-		const contentDir = exitOnCancel(
-			await text({
-				message: "Content directory:",
-				placeholder: "./src/content/blog",
-			}),
-		);
-
-		const imagesDir = exitOnCancel(
-			await text({
-				message: "Cover images directory (leave empty to skip):",
-				placeholder: "./src/assets",
-			}),
-		);
-
-		// Public/static directory for .well-known files
-		const publicDir = exitOnCancel(
-			await text({
-				message: "Public/static directory (for .well-known files):",
-				placeholder: "./public",
-			}),
-		);
-
-		// Output directory for inject command
-		const outputDir = exitOnCancel(
-			await text({
-				message: "Build output directory (for link tag injection):",
-				placeholder: "./dist",
-			}),
-		);
-
-		// Path prefix for posts
-		const pathPrefix = exitOnCancel(
-			await text({
-				message: "URL path prefix for posts:",
-				placeholder: "/posts, /blog, /articles, etc.",
-			}),
-		);
-
-		// Frontmatter mapping configuration
 		log.info(
 			"Configure your frontmatter field mappings (press Enter to use defaults):",
 		);
 
-		const titleField = exitOnCancel(
-			await text({
-				message: "Field name for title:",
-				defaultValue: "title",
-				placeholder: "title",
-			}),
+		// Frontmatter mapping group
+		const frontmatterConfig = await group(
+			{
+				titleField: () =>
+					text({
+						message: "Field name for title:",
+						defaultValue: "title",
+						placeholder: "title",
+					}),
+				descField: () =>
+					text({
+						message: "Field name for description:",
+						defaultValue: "description",
+						placeholder: "description",
+					}),
+				dateField: () =>
+					text({
+						message: "Field name for publish date:",
+						defaultValue: "publishDate",
+						placeholder: "publishDate, pubDate, date, etc.",
+					}),
+				coverField: () =>
+					text({
+						message: "Field name for cover image:",
+						defaultValue: "ogImage",
+						placeholder: "ogImage, coverImage, image, hero, etc.",
+					}),
+				tagsField: () =>
+					text({
+						message: "Field name for tags:",
+						defaultValue: "tags",
+						placeholder: "tags, categories, keywords, etc.",
+					}),
+			},
+			{ onCancel },
 		);
 
-		const descField = exitOnCancel(
-			await text({
-				message: "Field name for description:",
-				defaultValue: "description",
-				placeholder: "description",
-			}),
-		);
-
-		const dateField = exitOnCancel(
-			await text({
-				message: "Field name for publish date:",
-				defaultValue: "publishDate",
-				placeholder: "publishDate, pubDate, date, etc.",
-			}),
-		);
-
-		const coverField = exitOnCancel(
-			await text({
-				message: "Field name for cover image:",
-				defaultValue: "ogImage",
-				placeholder: "ogImage, coverImage, image, hero, etc.",
-			}),
-		);
-
-		const tagsField = exitOnCancel(
-			await text({
-				message: "Field name for tags:",
-				defaultValue: "tags",
-				placeholder: "tags, categories, keywords, etc.",
-			}),
-		);
-
+		// Build frontmatter mapping object
 		let frontmatterMapping: FrontmatterMapping | undefined = {};
 
-		if (titleField && titleField !== "title") {
-			frontmatterMapping.title = titleField;
+		if (frontmatterConfig.titleField !== "title") {
+			frontmatterMapping.title = frontmatterConfig.titleField;
 		}
-		if (descField && descField !== "description") {
-			frontmatterMapping.description = descField;
+		if (frontmatterConfig.descField !== "description") {
+			frontmatterMapping.description = frontmatterConfig.descField;
 		}
-		if (dateField && dateField !== "publishDate") {
-			frontmatterMapping.publishDate = dateField;
+		if (frontmatterConfig.dateField !== "publishDate") {
+			frontmatterMapping.publishDate = frontmatterConfig.dateField;
 		}
-		if (coverField && coverField !== "ogImage") {
-			frontmatterMapping.coverImage = coverField;
+		if (frontmatterConfig.coverField !== "ogImage") {
+			frontmatterMapping.coverImage = frontmatterConfig.coverField;
 		}
-		if (tagsField && tagsField !== "tags") {
-			frontmatterMapping.tags = tagsField;
+		if (frontmatterConfig.tagsField !== "tags") {
+			frontmatterMapping.tags = frontmatterConfig.tagsField;
 		}
 
 		// Only keep frontmatterMapping if it has any custom fields
@@ -159,18 +157,20 @@ export const initCommand = command({
 		}
 
 		// Publication setup
-		const publicationChoice = exitOnCancel(
-			await select({
-				message: "Publication setup:",
-				options: [
-					{ label: "Create a new publication", value: "create" },
-					{ label: "Use an existing publication AT URI", value: "existing" },
-				],
-			}),
-		);
+		const publicationChoice = await select({
+			message: "Publication setup:",
+			options: [
+				{ label: "Create a new publication", value: "create" },
+				{ label: "Use an existing publication AT URI", value: "existing" },
+			],
+		});
+
+		if (publicationChoice === Symbol.for("cancel")) {
+			onCancel();
+		}
 
 		let publicationUri: string;
-		let credentials = await loadCredentials();
+		const credentials = await loadCredentials();
 
 		if (publicationChoice === "create") {
 			// Need credentials to create a publication
@@ -195,46 +195,43 @@ export const initCommand = command({
 				process.exit(1);
 			}
 
-			const pubName = exitOnCancel(
-				await text({
-					message: "Publication name:",
-					placeholder: "My Blog",
-				}),
-			);
-
-			if (!pubName) {
-				log.error("Publication name is required");
-				process.exit(1);
-			}
-
-			const pubDescription = exitOnCancel(
-				await text({
-					message: "Publication description (optional):",
-					placeholder: "A blog about...",
-				}),
-			);
-
-			const iconPath = exitOnCancel(
-				await pathPrompt({
-					message: "Icon image path (leave empty to skip):",
-				}),
-			);
-
-			const showInDiscover = exitOnCancel(
-				await confirm({
-					message: "Show in Discover feed?",
-					initialValue: true,
-				}),
+			const publicationConfig = await group(
+				{
+					name: () =>
+						text({
+							message: "Publication name:",
+							placeholder: "My Blog",
+							validate: (value) => {
+								if (!value) return "Publication name is required";
+							},
+						}),
+					description: () =>
+						text({
+							message: "Publication description (optional):",
+							placeholder: "A blog about...",
+						}),
+					iconPath: () =>
+						text({
+							message: "Icon image path (leave empty to skip):",
+							placeholder: "./public/favicon.png",
+						}),
+					showInDiscover: () =>
+						confirm({
+							message: "Show in Discover feed?",
+							initialValue: true,
+						}),
+				},
+				{ onCancel },
 			);
 
 			s.start("Creating publication...");
 			try {
 				publicationUri = await createPublication(agent, {
-					url: siteUrl,
-					name: pubName,
-					description: pubDescription || undefined,
-					iconPath: iconPath || undefined,
-					showInDiscover,
+					url: siteConfig.siteUrl,
+					name: publicationConfig.name,
+					description: publicationConfig.description || undefined,
+					iconPath: publicationConfig.iconPath || undefined,
+					showInDiscover: publicationConfig.showInDiscover,
 				});
 				s.stop(`Publication created: ${publicationUri}`);
 			} catch (error) {
@@ -243,18 +240,18 @@ export const initCommand = command({
 				process.exit(1);
 			}
 		} else {
-			const uri = exitOnCancel(
-				await text({
-					message: "Publication AT URI:",
-					placeholder: "at://did:plc:.../site.standard.publication/...",
-				}),
-			);
+			const uri = await text({
+				message: "Publication AT URI:",
+				placeholder: "at://did:plc:.../site.standard.publication/...",
+				validate: (value) => {
+					if (!value) return "Publication URI is required";
+				},
+			});
 
-			if (!uri) {
-				log.error("Publication URI is required");
-				process.exit(1);
+			if (uri === Symbol.for("cancel")) {
+				onCancel();
 			}
-			publicationUri = uri;
+			publicationUri = uri as string;
 		}
 
 		// Get PDS URL from credentials (already loaded earlier)
@@ -262,12 +259,12 @@ export const initCommand = command({
 
 		// Generate config file
 		const configContent = generateConfigTemplate({
-			siteUrl: siteUrl,
-			contentDir: contentDir || "./content",
-			imagesDir: imagesDir || undefined,
-			publicDir: publicDir || "./public",
-			outputDir: outputDir || "./dist",
-			pathPrefix: pathPrefix || "/posts",
+			siteUrl: siteConfig.siteUrl,
+			contentDir: siteConfig.contentDir || "./content",
+			imagesDir: siteConfig.imagesDir || undefined,
+			publicDir: siteConfig.publicDir || "./public",
+			outputDir: siteConfig.outputDir || "./dist",
+			pathPrefix: siteConfig.pathPrefix || "/posts",
 			publicationUri,
 			pdsUrl,
 			frontmatter: frontmatterMapping,
@@ -279,9 +276,10 @@ export const initCommand = command({
 		log.success(`Configuration saved to ${configPath}`);
 
 		// Create .well-known/site.standard.publication file
-		const resolvedPublicDir = path.isAbsolute(publicDir || "./public")
-			? publicDir || "./public"
-			: path.join(process.cwd(), publicDir || "./public");
+		const publicDir = siteConfig.publicDir || "./public";
+		const resolvedPublicDir = path.isAbsolute(publicDir)
+			? publicDir
+			: path.join(process.cwd(), publicDir);
 		const wellKnownDir = path.join(resolvedPublicDir, ".well-known");
 		const wellKnownPath = path.join(wellKnownDir, "site.standard.publication");
 
