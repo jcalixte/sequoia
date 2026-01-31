@@ -34,9 +34,18 @@ export function parseFrontmatter(content: string, mapping?: FrontmatterMapping):
   const raw: Record<string, unknown> = {};
   const lines = frontmatterStr.split("\n");
 
-  for (const line of lines) {
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line === undefined) {
+      i++;
+      continue;
+    }
     const sepIndex = line.indexOf(separator);
-    if (sepIndex === -1) continue;
+    if (sepIndex === -1) {
+      i++;
+      continue;
+    }
 
     const key = line.slice(0, sepIndex).trim();
     let value = line.slice(sepIndex + 1).trim();
@@ -49,12 +58,50 @@ export function parseFrontmatter(content: string, mapping?: FrontmatterMapping):
       value = value.slice(1, -1);
     }
 
-    // Handle arrays (simple case for tags)
+    // Handle inline arrays (simple case for tags)
     if (value.startsWith("[") && value.endsWith("]")) {
       const arrayContent = value.slice(1, -1);
       raw[key] = arrayContent
         .split(",")
         .map((item) => item.trim().replace(/^["']|["']$/g, ""));
+    } else if (value === "" && !isToml) {
+      // Check for YAML-style multiline array (key with no value followed by - items)
+      const arrayItems: string[] = [];
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextLine = lines[j];
+        if (nextLine === undefined) {
+          j++;
+          continue;
+        }
+        // Check if line is a list item (starts with whitespace and -)
+        const listMatch = nextLine.match(/^\s+-\s*(.*)$/);
+        if (listMatch && listMatch[1] !== undefined) {
+          let itemValue = listMatch[1].trim();
+          // Remove quotes if present
+          if (
+            (itemValue.startsWith('"') && itemValue.endsWith('"')) ||
+            (itemValue.startsWith("'") && itemValue.endsWith("'"))
+          ) {
+            itemValue = itemValue.slice(1, -1);
+          }
+          arrayItems.push(itemValue);
+          j++;
+        } else if (nextLine.trim() === "") {
+          // Skip empty lines within the array
+          j++;
+        } else {
+          // Hit a new key or non-list content
+          break;
+        }
+      }
+      if (arrayItems.length > 0) {
+        raw[key] = arrayItems;
+        i = j;
+        continue;
+      } else {
+        raw[key] = value;
+      }
     } else if (value === "true") {
       raw[key] = true;
     } else if (value === "false") {
@@ -62,6 +109,7 @@ export function parseFrontmatter(content: string, mapping?: FrontmatterMapping):
     } else {
       raw[key] = value;
     }
+    i++;
   }
 
   // Apply field mappings to normalize to standard PostFrontmatter fields
