@@ -420,17 +420,15 @@ function truncateToGraphemes(str: string, maxGraphemes: number): string {
 		const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 		const segments = [...segmenter.segment(str)];
 		if (segments.length <= maxGraphemes) return str;
-		return (
-			segments
-				.slice(0, maxGraphemes - 3)
-				.map((s) => s.segment)
-				.join("") + "..."
-		);
+		return `${segments
+			.slice(0, maxGraphemes - 3)
+			.map((s) => s.segment)
+			.join("")}...`;
 	}
 	// Fallback
 	const chars = [...str];
 	if (chars.length <= maxGraphemes) return str;
-	return chars.slice(0, maxGraphemes - 3).join("") + "...";
+	return `${chars.slice(0, maxGraphemes - 3).join("")}...`;
 }
 
 /**

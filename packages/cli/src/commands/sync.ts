@@ -73,7 +73,7 @@ export const syncCommand = command({
 		// Create agent
 		const s = spinner();
 		s.start(`Connecting to ${credentials.pdsUrl}...`);
-		let agent;
+		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 		try {
 			agent = await createAgent(credentials);
 			s.stop(`Logged in as ${agent.session?.handle}`);

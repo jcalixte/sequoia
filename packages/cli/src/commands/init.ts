@@ -199,11 +199,11 @@ export const initCommand = command({
 
 			const s = spinner();
 			s.start("Connecting to ATProto...");
-			let agent;
+			let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 			try {
 				agent = await createAgent(credentials);
 				s.stop("Connected!");
-			} catch (error) {
+			} catch (_error) {
 				s.stop("Failed to connect");
 				log.error(
 					"Failed to connect. Check your credentials with 'sequoia auth'.",
@@ -288,7 +288,7 @@ export const initCommand = command({
 				placeholder: "7",
 				validate: (value) => {
 					const num = parseInt(value, 10);
-					if (isNaN(num) || num < 1) {
+					if (Number.isNaN(num) || num < 1) {
 						return "Please enter a positive number";
 					}
 				},
@@ -351,7 +351,7 @@ export const initCommand = command({
 			if (!gitignoreContent.includes(stateFilename)) {
 				await fs.writeFile(
 					gitignorePath,
-					gitignoreContent + `\n${stateFilename}\n`,
+					`${gitignoreContent}\n${stateFilename}\n`,
 				);
 				log.info(`Added ${stateFilename} to .gitignore`);
 			}

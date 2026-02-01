@@ -220,7 +220,6 @@ export function getSlugFromOptions(
 			break;
 		}
 
-		case "filename":
 		default:
 			slug = getSlugFromFilename(path.basename(relativePath));
 			break;
