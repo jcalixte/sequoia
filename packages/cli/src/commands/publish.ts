@@ -40,8 +40,13 @@ export const publishCommand = command({
 			short: "n",
 			description: "Preview what would be published without making changes",
 		}),
+		verbose: flag({
+			long: "verbose",
+			short: "v",
+			description: "Show more information",
+		})
 	},
-	handler: async ({ force, dryRun }) => {
+	handler: async ({ force, dryRun, verbose }) => {
 		// Load config
 		const configPath = await findConfig();
 		if (!configPath) {
@@ -233,7 +238,11 @@ export const publishCommand = command({
 				}
 			}
 
-			log.message(`  ${icon} ${post.frontmatter.title} (${reason})${bskyNote}`);
+			let postUrl = "";
+			if (verbose) {
+				postUrl = `\n    ${config.siteUrl}/${relativeFilePath}`;
+			}
+			log.message(`  ${icon} ${post.frontmatter.title} (${reason})${bskyNote}${postUrl}`);
 		}
 
 		if (dryRun) {
