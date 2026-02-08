@@ -163,7 +163,7 @@ export const publishCommand = command({
 		const postsToPublish: Array<{
 			post: BlogPost;
 			action: "create" | "update";
-			reason: string;
+			reason: "content changed" | "forced" | "new post" | "missing state";
 		}> = [];
 		const draftPosts: BlogPost[] = [];
 
