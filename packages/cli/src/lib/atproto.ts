@@ -2,7 +2,7 @@ import { Agent, AtpAgent } from "@atproto/api";
 import * as mimeTypes from "mime-types";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { stripMarkdownForText } from "./markdown";
+import { getTextContent } from "./markdown";
 import { getOAuthClient } from "./oauth-client";
 import type {
 	BlobObject,
@@ -248,17 +248,7 @@ export async function createDocument(
 	const pathPrefix = config.pathPrefix || "/posts";
 	const postPath = `${pathPrefix}/${post.slug}`;
 	const publishDate = new Date(post.frontmatter.publishDate);
-
-	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
-	let textContent: string;
-	if (
-		config.textContentField &&
-		post.rawFrontmatter?.[config.textContentField]
-	) {
-		textContent = String(post.rawFrontmatter[config.textContentField]);
-	} else {
-		textContent = stripMarkdownForText(post.content);
-	}
+	const textContent = getTextContent(post, config.textContentField);
 
 	const record: Record<string, unknown> = {
 		$type: "site.standard.document",
@@ -310,17 +300,7 @@ export async function updateDocument(
 	const pathPrefix = config.pathPrefix || "/posts";
 	const postPath = `${pathPrefix}/${post.slug}`;
 	const publishDate = new Date(post.frontmatter.publishDate);
-
-	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
-	let textContent: string;
-	if (
-		config.textContentField &&
-		post.rawFrontmatter?.[config.textContentField]
-	) {
-		textContent = String(post.rawFrontmatter[config.textContentField]);
-	} else {
-		textContent = stripMarkdownForText(post.content);
-	}
+	const textContent = getTextContent(post, config.textContentField);
 
 	const record: Record<string, unknown> = {
 		$type: "site.standard.document",
