@@ -245,7 +245,7 @@ export const publishCommand = command({
 				postUrl = `\n ${config.siteUrl}${pathPrefix}/${post.slug}`;
 			}
 			log.message(
-				`  ${icon} ${post.frontmatter.title} (${reason})${bskyNote}${postUrl}`,
+				`  ${icon} ${post.filePath} (${reason})${bskyNote}${postUrl}`,
 			);
 		}
 
@@ -292,6 +292,12 @@ export const publishCommand = command({
 
 		for (const { post, action } of postsToPublish) {
 			s.start(`Publishing: ${post.frontmatter.title}`);
+
+      // Init publish date
+      if (!post.frontmatter.publishDate) {
+        const [publishDate] = new Date().toISOString().split("T")
+        post.frontmatter.publishDate = publishDate!
+      }
 
 			try {
 				// Handle cover image upload

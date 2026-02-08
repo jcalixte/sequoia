@@ -299,6 +299,7 @@ export async function updateDocument(
 
 	const pathPrefix = config.pathPrefix || "/posts";
 	const postPath = `${pathPrefix}/${post.slug}`;
+  
 	const publishDate = new Date(post.frontmatter.publishDate);
 	const textContent = getTextContent(post, config.textContentField);
 
