@@ -248,11 +248,14 @@ export async function createDocument(
 	const pathPrefix = config.pathPrefix || "/posts";
 	const postPath = `${pathPrefix}/${post.slug}`;
 	const publishDate = new Date(post.frontmatter.publishDate);
+  const trimmedContent = post.content.trim()
 	const textContent = getTextContent(post, config.textContentField);
+  const titleMatch = trimmedContent.match(/^# (.+)$/m)
+  const title = titleMatch ? titleMatch[1] : post.frontmatter.title
 
 	const record: Record<string, unknown> = {
 		$type: "site.standard.document",
-		title: post.frontmatter.title,
+		title,
 		site: config.publicationUri,
 		path: postPath,
 		textContent: textContent.slice(0, 10000),
@@ -301,11 +304,14 @@ export async function updateDocument(
 	const postPath = `${pathPrefix}/${post.slug}`;
   
 	const publishDate = new Date(post.frontmatter.publishDate);
+  const trimmedContent = post.content.trim()
 	const textContent = getTextContent(post, config.textContentField);
+  const titleMatch = trimmedContent.match(/^# (.+)$/m)
+  const title = titleMatch ? titleMatch[1] : post.frontmatter.title
 
 	const record: Record<string, unknown> = {
 		$type: "site.standard.document",
-		title: post.frontmatter.title,
+		title,
 		site: config.publicationUri,
 		path: postPath,
 		textContent: textContent.slice(0, 10000),
@@ -379,9 +385,9 @@ export async function listDocuments(
 			limit: 100,
 			cursor,
 		});
-
+    
 		for (const record of response.data.records) {
-			if (!isDocumentRecord(record.value)) {
+      if (!isDocumentRecord(record.value)) {
 				continue;
 			}
 
