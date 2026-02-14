@@ -25,7 +25,7 @@ import {
 } from "../lib/markdown";
 import type { BlogPost, BlobObject, StrongRef } from "../lib/types";
 import { exitOnCancel } from "../lib/prompts";
-import { createNote, updateNote, findPostsWithStaleLinks, type NoteOptions } from "../extensions/litenote"
+import { createNote, updateNote, findPostsWithStaleLinks, type NoteOptions } from "../extensions/remanso"
 
 export const publishCommand = command({
 	name: "publish",
@@ -415,7 +415,7 @@ export const publishCommand = command({
 			}
 		}
 
-		// Pass 2: Create/update litenote notes (atUris are now available for link resolution)
+		// Pass 2: Create/update Remanso notes (atUris are now available for link resolution)
 		for (const { post, action, atUri } of noteQueue) {
 			try {
 				if (action === "create") {
